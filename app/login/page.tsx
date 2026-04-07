@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { signIn, signUp } from "@/lib/actions/auth"
+import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,24 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        router.push("/")
+      } else {
+        setChecking(false)
+      }
+    }
+    checkSession()
+  }, [router])
+
+  if (checking) {
+    return null // or a loading spinner
+  }
+
 
   const handleSubmit = async (formData: FormData) => {
     setError(null)
@@ -27,11 +46,11 @@ export default function LoginPage() {
     if (result?.error) {
       setError(result.error)
       setLoading(false)
-    } else if (result?.success && isSignUp) {
-      // After signup, redirect to profile setup
+    } else if (isSignUp) {
+      // For signUp, redirect to profile setup on success
       router.push("/profile/setup")
     }
-    // For signIn, the server action will redirect
+    // For signIn, the server action redirects automatically on success
   }
 
   return (

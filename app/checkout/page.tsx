@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { WhatsApp } from "lucide-react"
+import { MessageCircle } from "lucide-react"
 import type { Profile } from "@/lib/types"
 
 export default function CheckoutPage() {
@@ -193,7 +193,7 @@ ${items.map((i) => `${i.qty}x ${i.name} - ₹${i.price * i.qty}`).join("\n")}
                 onClick={handleOrder}
                 disabled={loading}
               >
-                <WhatsApp className="w-5 h-5" />
+                <MessageCircle className="w-5 h-5" />
                 {loading ? "Processing..." : "Order via WhatsApp"}
               </Button>
             </CardFooter>
