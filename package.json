@@ -9,6 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.4",
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-scroll-area": "^1.2.2",
+    "@radix-ui/react-select": "^2.1.4",
+    "@radix-ui/react-slot": "^1.1.1",
+    "@radix-ui/react-toast": "^1.2.4",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.102.0",
     "class-variance-authority": "^0.7.1",
@@ -33,5 +39,22 @@
     "eslint-config-next": "16.2.2",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "description": "A web application for college students to order food from The Hunters Kitchen with free delivery.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lohith848/hunters-kitchen.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Lohith848/hunters-kitchen/issues"
+  },
+  "homepage": "https://github.com/Lohith848/hunters-kitchen#readme"
 }

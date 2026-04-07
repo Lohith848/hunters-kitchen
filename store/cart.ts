@@ -1,45 +1,59 @@
 import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
-type CartItem = {
-    id: string
-    name: string
-    price: number
-    qty: number
+export type CartItem = {
+  id: string
+  name: string
+  price: number
+  qty: number
 }
 
-type CartStore = {
-    items: CartItem[]
-    addItem: (item: CartItem) => void
-    removeItem: (id: string) => void
-    clearCart: () => void
+export type CartStore = {
+  items: CartItem[]
+  addItem: (item: CartItem) => void
+  removeItem: (id: string) => void
+  updateQuantity: (id: string, qty: number) => void
+  clearCart: () => void
 }
 
-export const useCart = create<CartStore>((set) => ({
-    items: [],
+export const useCart = create<CartStore>()(
+  persist(
+    (set) => ({
+      items: [],
 
-    addItem: (item) =>
+      addItem: (item) =>
         set((state) => {
-            const existing = state.items.find(i => i.id === item.id)
+          const existing = state.items.find((i) => i.id === item.id)
 
-            if (existing) {
-                return {
-                    items: state.items.map(i =>
-                        i.id === item.id
-                            ? { ...i, qty: i.qty + 1 }
-                            : i
-                    ),
-                }
-            }
-
+          if (existing) {
             return {
-                items: [...state.items, { ...item, qty: 1 }],
+              items: state.items.map((i) =>
+                i.id === item.id ? { ...i, qty: i.qty + 1 } : i
+              ),
             }
+          }
+
+          return {
+            items: [...state.items, { ...item, qty: 1 }],
+          }
         }),
 
-    removeItem: (id) =>
+      removeItem: (id) =>
         set((state) => ({
-            items: state.items.filter(i => i.id !== id),
+          items: state.items.filter((i) => i.id !== id),
         })),
 
-    clearCart: () => set({ items: [] }),
-}))
+      updateQuantity: (id, qty) =>
+        set((state) => ({
+          items: state.items.map((i) =>
+            i.id === id ? { ...i, qty: Math.max(0, qty) } : i
+          ).filter((i) => i.qty > 0),
+        })),
+
+      clearCart: () => set({ items: [] }),
+    }),
+    {
+      name: "hunters-kitchen-cart",
+    }
+  )
+)
