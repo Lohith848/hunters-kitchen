@@ -3,19 +3,20 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabaseClient"
-import { updateProfile } from "@/lib/actions/auth"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import type { Profile } from "@/lib/types"
 
 export default function ProfilePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [profile, setProfile] = useState<Profile | null>(null)
+  const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [college, setCollege] = useState("")
+  const [address, setAddress] = useState("")
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -35,22 +36,40 @@ export default function ProfilePage() {
       .eq("id", user.id)
       .maybeSingle()
 
-    setProfile(data)
+    if (data) {
+      setFullName(data.full_name || "")
+      setPhone(data.phone || "")
+      setCollege(data.college || "")
+      setAddress(data.address || "")
+    }
     setLoading(false)
   }
 
-  const handleSubmit = async (formData: FormData) => {
-    setError(null)
+  const handleSave = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      alert("Login required")
+      return
+    }
+
     setSaving(true)
 
-    const result = await updateProfile(formData)
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      full_name: fullName,
+      phone,
+      college,
+      address,
+    })
 
-    if (result?.error) {
-      setError(result.error)
+    if (error) {
+      console.error(error)
+      setError(error.message)
       setSaving(false)
     } else {
+      alert("Saved successfully ✅")
       setSaving(false)
-      loadProfile()
     }
   }
 
@@ -72,14 +91,14 @@ export default function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={handleSubmit} className="space-y-4">
+          <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="full_name">Full Name</Label>
               <Input
                 id="full_name"
-                name="full_name"
                 type="text"
-                defaultValue={profile?.full_name}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 required
                 disabled={saving}
               />
@@ -88,9 +107,9 @@ export default function ProfilePage() {
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
-                name="phone"
                 type="tel"
-                defaultValue={profile?.phone}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 required
                 disabled={saving}
               />
@@ -99,9 +118,9 @@ export default function ProfilePage() {
               <Label htmlFor="college">College Name</Label>
               <Input
                 id="college"
-                name="college"
                 type="text"
-                defaultValue={profile?.college}
+                value={college}
+                onChange={(e) => setCollege(e.target.value)}
                 required
                 disabled={saving}
               />
@@ -110,8 +129,8 @@ export default function ProfilePage() {
               <Label htmlFor="address">Hostel Address</Label>
               <Textarea
                 id="address"
-                name="address"
-                defaultValue={profile?.address}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
                 required
                 disabled={saving}
                 rows={3}
@@ -122,10 +141,10 @@ export default function ProfilePage() {
                 {error}
               </div>
             )}
-            <Button type="submit" disabled={saving}>
+            <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}
             </Button>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>

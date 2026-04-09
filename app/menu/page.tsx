@@ -198,32 +198,29 @@ function MenuCard({
 
           <div className="mt-3">
             {quantity === 0 ? (
-              <Button
+              <button
                 onClick={onAdd}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg h-9 text-sm"
+                className="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold"
               >
-                <Plus className="w-4 h-4 mr-1" />
                 Add
-              </Button>
+              </button>
             ) : (
-              <div className="flex items-center justify-between bg-orange-50 rounded-lg p-1">
-                <Button
+              <div className="flex items-center justify-between bg-orange-100 rounded-lg px-3 py-2">
+                <button
                   onClick={onDecrease}
-                  variant="ghost"
-                  className="h-8 w-8 rounded-md text-orange-600 hover:bg-orange-100 hover:text-orange-700 p-0"
+                  className="bg-white text-black px-3 py-1 rounded shadow font-bold"
                 >
-                  <Minus className="w-4 h-4" />
-                </Button>
-                <span className="font-bold text-orange-700 text-sm min-w-[2rem] text-center">
+                  -
+                </button>
+                <span className="font-bold text-orange-600 text-lg">
                   {quantity}
                 </span>
-                <Button
+                <button
                   onClick={onIncrease}
-                  variant="ghost"
-                  className="h-8 w-8 rounded-md text-orange-600 hover:bg-orange-100 hover:text-orange-700 p-0"
+                  className="bg-orange-500 text-white px-3 py-1 rounded font-bold"
                 >
-                  <Plus className="w-4 h-4" />
-                </Button>
+                  +
+                </button>
               </div>
             )}
           </div>
