@@ -6,19 +6,22 @@ export type CartItem = {
   name: string
   price: number
   qty: number
+  image_url?: string
 }
 
 export type CartStore = {
   items: CartItem[]
-  addItem: (item: CartItem) => void
+  addItem: (item: Omit<CartItem, "qty">) => void
   removeItem: (id: string) => void
   updateQuantity: (id: string, qty: number) => void
   clearCart: () => void
+  getTotalItems: () => number
+  getTotalPrice: () => number
 }
 
 export const useCart = create<CartStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       items: [],
 
       addItem: (item) =>
@@ -51,6 +54,14 @@ export const useCart = create<CartStore>()(
         })),
 
       clearCart: () => set({ items: [] }),
+
+      getTotalItems: () => {
+        return get().items.reduce((sum, item) => sum + item.qty, 0)
+      },
+
+      getTotalPrice: () => {
+        return get().items.reduce((sum, item) => sum + item.price * item.qty, 0)
+      },
     }),
     {
       name: "hunters-kitchen-cart",
