@@ -106,7 +106,7 @@ export default function LoginPage() {
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
       email: adminEmail,
       password: adminPassword,
     })
@@ -115,6 +115,14 @@ export default function LoginPage() {
       setLoading(null)
       return
     }
+
+    if (signInData?.user) {
+      await supabase.from("admins").upsert({
+        id: signInData.user.id,
+        email: adminEmail,
+      }, { onConflict: 'id' })
+    }
+
     setTimeout(() => {
       window.location.href = "/admin"
     }, 500)

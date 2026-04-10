@@ -20,5 +20,18 @@ export default async function AdminLayout({
     redirect("/")
   }
 
+  const { data: adminCheck } = await supabase
+    .from("admins")
+    .select("id")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  if (!adminCheck) {
+    await supabase.from("admins").upsert({
+      id: user.id,
+      email: user.email,
+    }, { onConflict: 'id' })
+  }
+
   return <AdminLayoutClient>{children}</AdminLayoutClient>
 }
