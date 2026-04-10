@@ -15,22 +15,28 @@ import {
   ArrowRight,
   UtensilsCrossed,
   Heart,
-  MapPin,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react"
+
+type StoreStatus = {
+  is_open: boolean
+  reason?: string
+}
 
 export default function HomePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ is_open: true })
 
   useEffect(() => {
     checkAuth()
+    checkStoreStatus()
   }, [])
 
   const checkAuth = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    const { data: { session } } = await supabase.auth.getSession()
     
     if (!session) {
       router.replace("/login")
@@ -38,6 +44,43 @@ export default function HomePage() {
       setIsLoggedIn(true)
       setLoading(false)
     }
+  }
+
+  const checkStoreStatus = async () => {
+    const now = new Date()
+    const currentTime = now.toTimeString().slice(0, 5)
+    const today = now.toISOString().split("T")[0]
+
+    const { data: settings } = await supabase
+      .from("hotel_settings")
+      .select("*")
+      .eq("id", 1)
+      .single()
+
+    const { data: holidays } = await supabase
+      .from("holidays")
+      .select("*")
+      .gte("date", today)
+      .lte("date", today)
+
+    if (holidays && holidays.length > 0) {
+      setStoreStatus({ is_open: false, reason: `Holiday: ${holidays[0].reason || "Closed today"}` })
+      return
+    }
+
+    if (!settings?.is_open) {
+      setStoreStatus({ is_open: false, reason: "Store is closed" })
+      return
+    }
+
+    if (settings?.opening_time && settings?.closing_time) {
+      if (currentTime < settings.opening_time || currentTime > settings.closing_time) {
+        setStoreStatus({ is_open: false, reason: `Opens at ${settings.opening_time}` })
+        return
+      }
+    }
+
+    setStoreStatus({ is_open: true })
   }
 
   if (loading) {
@@ -53,32 +96,32 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Distinctive Warm Design */}
+      {!storeStatus.is_open && (
+        <div className="bg-destructive/10 border-b border-destructive/20">
+          <div className="container py-3 px-4">
+            <div className="flex items-center justify-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" />
+              <span className="font-medium">{storeStatus.reason || "Store is currently closed"}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className="relative overflow-hidden">
-        {/* Background patterns */}
         <div className="absolute inset-0 -z-10">
-          {/* Large organic blob shapes */}
           <div className="absolute top-[-20%] right-[-10%] w-[700px] h-[700px] blob-1 bg-gradient-to-br from-primary/8 to-transparent blur-3xl opacity-60" />
           <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] blob-2 bg-gradient-to-tr from-secondary/10 to-transparent blur-3xl opacity-50" />
-          
-          {/* Subtle grid pattern overlay */}
           <div className="absolute inset-0 bg-grid opacity-30" />
-          
-          {/* Decorative lines */}
-          <div className="absolute top-40 left-10 w-px h-40 bg-gradient-to-b from-primary/0 via-primary/30 to-primary/0" />
-          <div className="absolute bottom-40 right-10 w-px h-40 bg-gradient-to-t from-secondary/0 via-secondary/30 to-secondary/0" />
         </div>
 
         <div className="container py-20 md:py-28 lg:py-36">
           <div className="flex flex-col items-center text-center max-w-3xl mx-auto animate-fade-up">
-            {/* Badge with warm styling */}
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-card border-2 border-border/60 text-sm font-medium shadow-sm mb-8 hover:shadow-md transition-shadow">
               <Sparkles className="w-4 h-4 text-primary" />
               <span className="text-muted-foreground">Student</span>
               <span className="text-primary">Exclusive</span>
             </div>
 
-            {/* Distinctive typography with warm gradient */}
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]">
               <span className="block">Fresh Food,</span>
               <span className="text-gradient block mt-2">Free Delivery</span>
@@ -90,27 +133,37 @@ export default function HomePage() {
               home-style meals straight to your college hostel. No hidden fees, ever.
             </p>
 
-            {/* CTA buttons with distinctive styling */}
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-12">
-              <Link
-                href="/menu"
-                className="group flex items-center gap-3 h-14 px-8 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300"
-              >
-                <UtensilsCrossed className="w-5 h-5" />
-                Order Now
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link
-                href="/menu"
-                className="group flex items-center gap-2 h-14 px-6 rounded-2xl border-2 border-border/60 bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-card/80 transition-all duration-200"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                Browse Menu
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              {storeStatus.is_open ? (
+                <>
+                  <Link
+                    href="/menu"
+                    className="group flex items-center gap-3 h-14 px-8 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-1 transition-all duration-300"
+                  >
+                    <UtensilsCrossed className="w-5 h-5" />
+                    Order Now
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                  <Link
+                    href="/menu"
+                    className="group flex items-center gap-2 h-14 px-6 rounded-2xl border-2 border-border/60 bg-card text-sm font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 hover:bg-card/80 transition-all duration-200"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Browse Menu
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-muted text-muted-foreground">
+                    <XCircle className="w-5 h-5" />
+                    <span className="font-medium">Currently Closed</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{storeStatus.reason}</p>
+                </div>
+              )}
             </div>
 
-            {/* Trust indicators */}
             <div className="flex items-center gap-8 mt-10 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -129,7 +182,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section - Clean Card Design */}
       <section className="border-y border-border/40 bg-muted/10">
         <div className="container py-10">
           <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-4">
@@ -152,7 +204,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Why Students Love Us - Cards with hover effects */}
       <section className="container py-20 md:py-28">
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
@@ -191,7 +242,6 @@ export default function HomePage() {
               key={feature.title}
               className="group relative p-8 rounded-2xl bg-card border-2 border-border/40 hover:border-primary/30 hover-lift"
             >
-              {/* Decorative corner accent */}
               <div className="absolute top-0 right-0 w-16 h-16 overflow-hidden">
                 <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-gradient-to-br from-primary/5 to-transparent rounded-full" />
               </div>
@@ -212,7 +262,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How It Works - Step-by-step design */}
       <section className="bg-muted/20 border-y border-border/40">
         <div className="container py-20 md:py-24">
           <div className="text-center mb-16 animate-fade-up">
@@ -243,7 +292,6 @@ export default function HomePage() {
               },
             ].map((item, index) => (
               <div key={item.step} className="relative text-center group">
-                {/* Connector line */}
                 {index < 2 && (
                   <div className="hidden md:block absolute top-12 left-[calc(50%+40px)] w-[calc(100%-80px)] h-px bg-gradient-to-r from-border via-primary/30 to-border" />
                 )}
@@ -265,14 +313,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section - Warm gradient with distinctive design */}
       <section className="container py-20 md:py-24">
         <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-primary via-[oklch(0.48_0.14_35)] to-[oklch(0.55_0.12_30)] p-12 md:p-16 text-center">
-          {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
-          
-          {/* Subtle pattern */}
           <div className="absolute inset-0 bg-dots opacity-20" />
 
           <div className="relative z-10 animate-fade-up">
@@ -282,14 +326,21 @@ export default function HomePage() {
             <p className="text-white/80 mb-10 max-w-lg mx-auto text-lg">
               Join hundreds of students who enjoy fresh meals delivered free every day.
             </p>
-            <Link
-              href="/menu"
-              className="group inline-flex items-center gap-3 h-14 px-10 rounded-2xl bg-white text-primary font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
-            >
-              <UtensilsCrossed className="w-5 h-5" />
-              View Full Menu
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
+            {storeStatus.is_open ? (
+              <Link
+                href="/menu"
+                className="group inline-flex items-center gap-3 h-14 px-10 rounded-2xl bg-white text-primary font-semibold shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
+              >
+                <UtensilsCrossed className="w-5 h-5" />
+                View Full Menu
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            ) : (
+              <div className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/20 text-white">
+                <XCircle className="w-5 h-5" />
+                <span className="font-medium">{storeStatus.reason}</span>
+              </div>
+            )}
           </div>
         </div>
       </section>

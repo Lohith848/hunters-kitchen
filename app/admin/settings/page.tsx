@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getHotelSettings, updateHotelSettings, getHolidays, addHoliday, deleteHoliday } from "@/lib/actions/admin"
+import { supabase } from "@/lib/supabaseClient"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Trash2, Loader2, Calendar, Clock, Ban, XCircle } from "lucide-react"
+import { Trash2, Loader2, Calendar, Clock, XCircle, CheckCircle } from "lucide-react"
 import type { HotelSettings, Holiday } from "@/lib/types"
 
 export default function AdminSettingsPage() {
@@ -17,57 +16,113 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [newHolidayDate, setNewHolidayDate] = useState("")
   const [newHolidayReason, setNewHolidayReason] = useState("")
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
   }, [])
 
   const loadData = async () => {
-    const [settingsData, holidaysData] = await Promise.all([
-      getHotelSettings(),
-      getHolidays(),
-    ])
-    setSettings(settingsData)
-    setHolidays(holidaysData)
+    try {
+      const [settingsRes, holidaysRes] = await Promise.all([
+        supabase.from("hotel_settings").select("*").eq("id", 1).single(),
+        supabase.from("holidays").select("*").order("date", { ascending: true }),
+      ])
+
+      if (!settingsRes.data) {
+        await supabase.from("hotel_settings").insert({
+          id: 1,
+          is_open: true,
+          opening_time: "10:00",
+          closing_time: "22:00",
+        })
+        setSettings({ id: 1, is_open: true, opening_time: "10:00", closing_time: "22:00" })
+      } else {
+        setSettings(settingsRes.data)
+      }
+      setHolidays(holidaysRes.data || [])
+    } catch (err) {
+      console.error("Error loading data:", err)
+    }
     setLoading(false)
   }
 
   const handleSettingsSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setSaving(true)
+    setError(null)
+
     const formData = new FormData(e.currentTarget)
-    await updateHotelSettings(formData)
-    await loadData()
+    const opening_time = formData.get("opening_time") as string
+    const closing_time = formData.get("closing_time") as string
+
+    const { error } = await supabase
+      .from("hotel_settings")
+      .upsert({
+        id: 1,
+        opening_time,
+        closing_time,
+        is_open: settings?.is_open ?? true,
+      })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      await loadData()
+    }
     setSaving(false)
   }
 
   const handleAddHoliday = async () => {
     if (!newHolidayDate) return
-    const formData = new FormData()
-    formData.append("date", newHolidayDate)
-    formData.append("reason", newHolidayReason)
-    await addHoliday(formData)
-    setNewHolidayDate("")
-    setNewHolidayReason("")
-    loadData()
+    setSaving(true)
+    setError(null)
+
+    const { error } = await supabase.from("holidays").insert({
+      date: newHolidayDate,
+      reason: newHolidayReason || null,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setNewHolidayDate("")
+      setNewHolidayReason("")
+      await loadData()
+    }
+    setSaving(false)
   }
 
   const handleDeleteHoliday = async (id: string) => {
     if (confirm("Are you sure you want to remove this holiday?")) {
-      await deleteHoliday(id)
-      loadData()
+      setSaving(true)
+      const { error } = await supabase.from("holidays").delete().eq("id", id)
+      if (!error) {
+        await loadData()
+      }
+      setSaving(false)
     }
   }
 
   const toggleStoreStatus = async () => {
     if (!settings) return
     setSaving(true)
-    const formData = new FormData()
-    formData.append("is_open", (!settings.is_open).toString())
-    formData.append("opening_time", settings.opening_time)
-    formData.append("closing_time", settings.closing_time)
-    await updateHotelSettings(formData)
-    await loadData()
+    setError(null)
+
+    const { error } = await supabase
+      .from("hotel_settings")
+      .upsert({
+        id: 1,
+        is_open: !settings.is_open,
+        opening_time: settings.opening_time,
+        closing_time: settings.closing_time,
+      })
+
+    if (!error) {
+      await loadData()
+    } else {
+      setError(error.message)
+    }
     setSaving(false)
   }
 
@@ -84,21 +139,27 @@ export default function AdminSettingsPage() {
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">Manage hotel timings and holidays</p>
+          <p className="text-muted-foreground">Manage store timings and holidays</p>
         </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error}
+          </div>
+        )}
 
         <div className={`p-4 rounded-2xl ${settings?.is_open ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               {settings?.is_open ? (
-                <Clock className="w-6 h-6 text-green-600" />
+                <CheckCircle className="w-6 h-6 text-green-600" />
               ) : (
                 <XCircle className="w-6 h-6 text-red-600" />
               )}
               <div>
                 <p className="font-semibold">{settings?.is_open ? "Store is Open" : "Store is Closed"}</p>
                 <p className="text-sm text-muted-foreground">
-                  {settings?.opening_time} - {settings?.closing_time}
+                  {settings?.opening_time || "10:00"} - {settings?.closing_time || "22:00"}
                 </p>
               </div>
             </div>
@@ -118,7 +179,7 @@ export default function AdminSettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
-              Hotel Timings
+              Store Timings
             </CardTitle>
             <CardDescription>Set your opening and closing times</CardDescription>
           </CardHeader>
@@ -160,7 +221,7 @@ export default function AdminSettingsPage() {
               <Calendar className="w-5 h-5" />
               Holidays
             </CardTitle>
-            <CardDescription>Add dates when the hotel will be closed</CardDescription>
+            <CardDescription>Add dates when the store will be closed</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-3">
@@ -177,7 +238,7 @@ export default function AdminSettingsPage() {
                 onChange={(e) => setNewHolidayReason(e.target.value)}
                 className="sm:flex-1"
               />
-              <Button onClick={handleAddHoliday} disabled={!newHolidayDate} className="shrink-0">
+              <Button onClick={handleAddHoliday} disabled={!newHolidayDate || saving} className="shrink-0">
                 Add
               </Button>
             </div>
@@ -209,6 +270,7 @@ export default function AdminSettingsPage() {
                       size="icon"
                       onClick={() => handleDeleteHoliday(holiday.id)}
                       className="text-destructive hover:text-destructive"
+                      disabled={saving}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
