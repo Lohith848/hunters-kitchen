@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
 import { supabase } from "@/lib/supabaseClient"
 import { useCart, type CartItem } from "@/store/cart"
 import { Button } from "@/components/ui/button"
@@ -22,7 +21,6 @@ import {
   Minus,
   Trash2,
   UtensilsCrossed,
-  AlertCircle,
   CheckCircle,
 } from "lucide-react"
 
@@ -98,7 +96,6 @@ export default function CartPage() {
     }
 
     setProfile(data)
-
     setLoading(true)
 
     const orderDetails = items
@@ -130,20 +127,20 @@ Total: ₹${total}`
   if (items.length === 0) {
     return (
       <div className="min-h-screen">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-800 py-16">
-          <div className="container">
-            <h1 className="text-4xl font-bold text-white">Your Cart</h1>
-            <p className="text-slate-400 mt-2">Review your order before checkout</p>
+        <div className="bg-gradient-to-br from-primary to-primary/80 py-12 md:py-16">
+          <div className="container px-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-white">Your Cart</h1>
+            <p className="text-white/70 mt-1">Review your order before checkout</p>
           </div>
         </div>
 
-        <div className="container py-12">
+        <div className="container px-4 py-12">
           <Card className="max-w-md mx-auto">
             <CardHeader className="text-center">
-              <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                <ShoppingBag className="w-12 h-12 text-gray-400" />
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                <ShoppingBag className="w-10 h-10 text-muted-foreground" />
               </div>
-              <CardTitle className="text-2xl">Your cart is empty</CardTitle>
+              <CardTitle className="text-xl">Your cart is empty</CardTitle>
             </CardHeader>
             <CardContent className="text-center text-muted-foreground">
               <p>Add items from the menu to get started</p>
@@ -151,7 +148,7 @@ Total: ₹${total}`
             <CardContent className="pt-0">
               <Button
                 onClick={() => router.push("/menu")}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold rounded-xl"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl"
               >
                 <UtensilsCrossed className="w-4 h-4 mr-2" />
                 Browse Menu
@@ -164,49 +161,40 @@ Total: ₹${total}`
   }
 
   return (
-    <div className="min-h-screen pb-24 md:pb-6">
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 py-16">
-        <div className="container">
-          <h1 className="text-4xl font-bold text-white">Your Cart</h1>
-          <p className="text-slate-400 mt-2">
+    <div className="min-h-screen pb-32 md:pb-8">
+      <div className="bg-gradient-to-br from-primary to-primary/80 py-10 md:py-16">
+        <div className="container px-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-white">Your Cart</h1>
+          <p className="text-white/70 mt-1">
             {items.length} item{items.length !== 1 ? "s" : ""} in your cart
           </p>
         </div>
       </div>
 
-      <div className="container py-6">
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
+      <div className="container px-4 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex-1 space-y-4">
             {items.map((item: CartItem) => (
               <Card key={item.id} className="overflow-hidden">
-                <CardContent className="p-0">
-                  <div className="flex items-center p-4 gap-4">
-                    {item.image_url && (
-                      <div className="relative w-20 h-20 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
-                        <Image
-                          src={item.image_url}
-                          alt={item.name}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    {!item.image_url && (
-                      <div className="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <ShoppingBag className="w-8 h-8 text-gray-400" />
-                      </div>
-                    )}
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <ShoppingBag className="w-6 h-6 text-primary/50" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg truncate">{item.name}</h3>
+                      <h3 className="font-semibold text-base truncate">{item.name}</h3>
                       <p className="text-sm text-muted-foreground">
                         ₹{item.price} each
                       </p>
                     </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-lg"
+                        className="h-9 w-9 rounded-lg"
                         disabled={item.qty <= 1}
                         onClick={() => {
                           if (item.qty <= 1) {
@@ -218,21 +206,26 @@ Total: ₹${total}`
                       >
                         <Minus className="w-4 h-4" />
                       </Button>
-                      <span className="w-8 text-center font-bold text-lg">
+                      <span className="w-10 text-center font-bold text-lg">
                         {item.qty}
                       </span>
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8 rounded-lg"
+                        className="h-9 w-9 rounded-lg"
                         onClick={() => updateQuantity(item.id, item.qty + 1)}
                       >
                         <Plus className="w-4 h-4" />
                       </Button>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="font-bold text-lg text-primary">
+                        ₹{item.price * item.qty}
+                      </span>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50"
+                        className="h-9 w-9 rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => removeItem(item.id)}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -244,18 +237,19 @@ Total: ₹${total}`
             ))}
 
             <Button
-                onClick={clearCart}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Clear Cart
-              </Button>
+              onClick={clearCart}
+              variant="ghost"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear Cart
+            </Button>
           </div>
 
-          <div>
+          <div className="lg:w-[360px]">
             <Card className="sticky top-24">
-              <CardHeader>
-                <CardTitle className="text-xl">Order Summary</CardTitle>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-lg">Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
@@ -264,23 +258,19 @@ Total: ₹${total}`
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Delivery Fee</span>
-                  <Badge
-                    variant="outline"
-                    className="text-green-600 border-green-200 bg-green-50"
-                  >
+                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
                     FREE
                   </Badge>
                 </div>
-                <div className="border-t pt-4 flex justify-between">
+                <div className="border-t pt-4 flex justify-between items-center">
                   <span className="font-semibold text-lg">Total</span>
-                  <span className="font-bold text-lg text-orange-600">₹{total}</span>
+                  <span className="font-bold text-xl text-primary">₹{total}</span>
                 </div>
               </CardContent>
 
               {!profileLoading && !profile && (
-                <CardContent className="pt-0">
+                <CardContent className="pt-0 pb-4">
                   <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg text-sm">
-                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span>Complete your profile for faster ordering</span>
                   </div>
                 </CardContent>
@@ -299,9 +289,7 @@ Total: ₹${total}`
                       Processing...
                     </>
                   ) : (
-                    <>
-                      Place Order
-                    </>
+                    "Place Order"
                   )}
                 </Button>
               </CardContent>
