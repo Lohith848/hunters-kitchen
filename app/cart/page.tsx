@@ -9,13 +9,21 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
   ShoppingBag,
   Plus,
   Minus,
   Trash2,
   UtensilsCrossed,
-  MessageCircle,
   AlertCircle,
+  CheckCircle,
 } from "lucide-react"
 
 type ProfileData = {
@@ -32,6 +40,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false)
   const [profile, setProfile] = useState<ProfileData>(null)
   const [profileLoading, setProfileLoading] = useState(true)
+  const [orderSuccess, setOrderSuccess] = useState(false)
 
   const total = items.reduce(
     (sum: number, item: CartItem) => sum + item.price * item.qty,
@@ -61,25 +70,34 @@ export default function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
-      alert("Your cart is empty")
       return
     }
 
-    if (!profile) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push("/login")
+      return
+    }
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle()
+
+    if (!data || !data.full_name || !data.phone || !data.address || !data.college) {
       const confirm = window.confirm(
-        "Profile not filled. Would you like to set up your profile first?"
+        "Please complete your profile before placing an order. Would you like to set up your profile now?"
       )
       if (confirm) {
+        sessionStorage.setItem("redirectAfterProfile", "/cart")
         router.push("/profile")
         return
       }
-    }
-
-    if (!profile?.full_name || !profile?.phone || !profile?.address || !profile?.college) {
-      alert("Please complete your profile before placing an order")
-      router.push("/profile")
       return
     }
+
+    setProfile(data)
 
     setLoading(true)
 
@@ -89,10 +107,10 @@ export default function CartPage() {
 
     const message = `New Order:
 
-Name: ${profile.full_name}
-Phone: ${profile.phone}
-College: ${profile.college}
-Address: ${profile.address}
+Name: ${data.full_name}
+Phone: ${data.phone}
+College: ${data.college}
+Address: ${data.address}
 
 Order:
 ${orderDetails}
@@ -106,7 +124,7 @@ Total: ₹${total}`
     clearCart()
     window.open(url, "_blank")
     setLoading(false)
-    router.push("/menu")
+    setOrderSuccess(true)
   }
 
   if (items.length === 0) {
@@ -226,13 +244,12 @@ Total: ₹${total}`
             ))}
 
             <Button
-              variant="ghost"
-              onClick={clearCart}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear Cart
-            </Button>
+                onClick={clearCart}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Clear Cart
+              </Button>
           </div>
 
           <div>
@@ -273,7 +290,7 @@ Total: ₹${total}`
                 <Button
                   onClick={handlePlaceOrder}
                   disabled={loading || items.length === 0}
-                  className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-xl h-12"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-xl h-12"
                   size="lg"
                 >
                   {loading ? (
@@ -283,8 +300,7 @@ Total: ₹${total}`
                     </>
                   ) : (
                     <>
-                      <MessageCircle className="w-5 h-5 mr-2" />
-                      Place Order via WhatsApp
+                      Place Order
                     </>
                   )}
                 </Button>
@@ -292,6 +308,31 @@ Total: ₹${total}`
             </Card>
           </div>
         </div>
+
+        <Dialog open={orderSuccess} onOpenChange={setOrderSuccess}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                Order Placed!
+              </DialogTitle>
+              <DialogDescription>
+                Your order has been sent via WhatsApp. We will confirm it shortly.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="sm:justify-center">
+              <Button
+                onClick={() => {
+                  setOrderSuccess(false)
+                  router.push("/menu")
+                }}
+                className="w-full"
+              >
+                Continue Shopping
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

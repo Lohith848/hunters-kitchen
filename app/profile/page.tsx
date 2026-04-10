@@ -68,8 +68,15 @@ export default function ProfilePage() {
       setError(error.message)
       setSaving(false)
     } else {
-      alert("Saved successfully ✅")
-      setSaving(false)
+      const redirectTo = sessionStorage.getItem("redirectAfterProfile")
+      sessionStorage.removeItem("redirectAfterProfile")
+      
+      if (redirectTo) {
+        router.push(redirectTo)
+      } else {
+        alert("Saved successfully ✅")
+        setSaving(false)
+      }
     }
   }
 
