@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabaseClient"
 import { useCart, type CartItem } from "@/store/cart"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -13,7 +12,6 @@ import {
   Plus,
   ShoppingBag,
   UtensilsCrossed,
-  ChefHat,
   Search,
 } from "lucide-react"
 
@@ -36,7 +34,6 @@ export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const { items, addItem, updateQuantity, getTotalItems } = useCart()
   const [cartCount, setCartCount] = useState(0)
-  const [isCartVisible, setIsCartVisible] = useState(false)
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const cartTotal = items.reduce((sum, i) => sum + i.price * i.qty, 0)
@@ -165,18 +162,8 @@ export default function MenuPage() {
   return (
     <div className="min-h-screen pb-28 md:pb-8">
       <div className="bg-gradient-to-br from-primary to-primary/80 sticky top-0 z-40 shadow-lg">
-        <div className="container py-4 px-4">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <ChefHat className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-bold text-white">Hunters Kitchen</h1>
-              <p className="text-xs text-white/70">Fresh food for your hostel</p>
-            </div>
-          </div>
-
-          <div className="relative">
+        <div className="container py-3 px-4">
+          <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
@@ -231,7 +218,7 @@ export default function MenuPage() {
             <div
               key={category}
               ref={(el) => { categoryRefs.current[category] = el }}
-              className="mb-8 scroll-mt-40"
+              className="mb-8 scroll-mt-32"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-1 h-6 bg-primary rounded-full" />
@@ -313,60 +300,40 @@ function MenuCard({
   onIncrease: () => void
   onDecrease: () => void
 }) {
-  const hasImage = item.image_url && item.image_url.length > 0
-
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
-      {hasImage ? (
-        <div className="relative h-32 sm:h-36 w-full bg-muted">
-          <Image
-            src={item.image_url}
-            alt={item.name}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
-            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 16vw"
-          />
-          <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
-            ₹{item.price}
-          </div>
-        </div>
-      ) : (
-        <div className="relative h-32 sm:h-36 w-full bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-          <ChefHat className="w-10 h-10 text-primary/30" />
-          <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-bold px-2 py-0.5 rounded-full">
-            ₹{item.price}
-          </div>
-        </div>
-      )}
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <CardContent className="p-3">
-        <h3 className="font-semibold text-sm mb-2 line-clamp-2 min-h-[2.5rem]">{item.name}</h3>
+        <div className="flex flex-col">
+          <h3 className="font-semibold text-sm mb-1 line-clamp-2">{item.name}</h3>
+          <p className="font-bold text-primary text-lg mb-3">₹{item.price}</p>
 
-        {quantity === 0 ? (
-          <button
-            onClick={onAdd}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-lg text-sm font-semibold transition-colors"
-          >
-            Add
-          </button>
-        ) : (
-          <div className="flex items-center justify-between bg-primary/10 rounded-lg px-2 py-1.5">
+          {quantity === 0 ? (
             <button
-              onClick={onDecrease}
-              className="w-8 h-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center font-bold hover:bg-primary/80 transition-colors"
+              onClick={onAdd}
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-2 rounded-lg text-sm font-semibold transition-colors"
             >
-              <Minus className="w-3 h-3" />
+              Add
             </button>
-            <span className="font-bold text-primary text-base">
-              {quantity}
-            </span>
-            <button
-              onClick={onIncrease}
-              className="w-8 h-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center font-bold hover:bg-primary/80 transition-colors"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center justify-between bg-primary/10 rounded-lg px-2 py-1.5">
+              <button
+                onClick={onDecrease}
+                className="w-8 h-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center font-bold hover:bg-primary/80 transition-colors"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="font-bold text-primary text-base">
+                {quantity}
+              </span>
+              <button
+                onClick={onIncrease}
+                className="w-8 h-8 bg-primary text-primary-foreground rounded-md flex items-center justify-center font-bold hover:bg-primary/80 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   )
