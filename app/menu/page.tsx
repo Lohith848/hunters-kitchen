@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   UtensilsCrossed,
   Search,
+  XCircle,
 } from "lucide-react"
 
 type MenuItemData = {
@@ -25,6 +26,11 @@ type MenuItemData = {
   description?: string
 }
 
+type StoreStatus = {
+  is_open: boolean
+  reason?: string
+}
+
 export default function MenuPage() {
   const router = useRouter()
   const [menu, setMenu] = useState<MenuItemData[]>([])
@@ -32,6 +38,7 @@ export default function MenuPage() {
   const [error, setError] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<string>("")
   const [searchQuery, setSearchQuery] = useState("")
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>({ is_open: true })
   const { items, addItem, updateQuantity, getTotalItems } = useCart()
   const [cartCount, setCartCount] = useState(0)
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -40,6 +47,7 @@ export default function MenuPage() {
 
   useEffect(() => {
     fetchMenu()
+    checkStoreStatus()
   }, [])
 
   useEffect(() => {
@@ -88,12 +96,53 @@ export default function MenuPage() {
     setLoading(false)
   }
 
+  const checkStoreStatus = async () => {
+    const now = new Date()
+    const currentTime = now.toTimeString().slice(0, 5)
+    const today = now.toISOString().split("T")[0]
+
+    const { data: settings } = await supabase
+      .from("hotel_settings")
+      .select("*")
+      .eq("id", 1)
+      .single()
+
+    const { data: holidays } = await supabase
+      .from("holidays")
+      .select("*")
+      .gte("date", today)
+      .lte("date", today)
+
+    if (holidays && holidays.length > 0) {
+      setStoreStatus({ is_open: false, reason: `Holiday: ${holidays[0].reason || "Closed today"}` })
+      return
+    }
+
+    if (!settings?.is_open) {
+      setStoreStatus({ is_open: false, reason: "Store is closed" })
+      return
+    }
+
+    if (settings?.opening_time && settings?.closing_time) {
+      if (currentTime < settings.opening_time || currentTime > settings.closing_time) {
+        setStoreStatus({ is_open: false, reason: `Opens at ${settings.opening_time}` })
+        return
+      }
+    }
+
+    setStoreStatus({ is_open: true })
+  }
+
   const getItemQty = (id: string): number => {
     const item = items.find((i) => i.id === id)
     return item?.qty || 0
   }
 
   const handleAdd = (menuItem: MenuItemData) => {
+    if (!storeStatus.is_open) {
+      alert("Store is currently closed. Please check back later.")
+      return
+    }
     const cartItem: Omit<CartItem, "qty"> = {
       id: menuItem.id,
       name: menuItem.name,
@@ -161,6 +210,17 @@ export default function MenuPage() {
 
   return (
     <div className="min-h-screen pb-28 md:pb-8">
+      {!storeStatus.is_open && (
+        <div className="bg-destructive/10 border-b border-destructive/20">
+          <div className="container py-3 px-4">
+            <div className="flex items-center justify-center gap-2 text-destructive">
+              <XCircle className="w-5 h-5" />
+              <span className="font-medium">{storeStatus.reason || "Store is currently closed"}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-gradient-to-br from-primary to-primary/80 sticky top-0 z-40 shadow-lg">
         <div className="container py-3 px-4">
           <div className="relative mb-3">

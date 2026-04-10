@@ -71,6 +71,39 @@ export default function CartPage() {
       return
     }
 
+    const now = new Date()
+    const currentTime = now.toTimeString().slice(0, 5)
+    const today = now.toISOString().split("T")[0]
+
+    const { data: settings } = await supabase
+      .from("hotel_settings")
+      .select("*")
+      .eq("id", 1)
+      .single()
+
+    const { data: holidays } = await supabase
+      .from("holidays")
+      .select("*")
+      .gte("date", today)
+      .lte("date", today)
+
+    if (holidays && holidays.length > 0) {
+      alert("Store is closed for holiday today. Please check back later.")
+      return
+    }
+
+    if (!settings?.is_open) {
+      alert("Store is currently closed. Please check back later.")
+      return
+    }
+
+    if (settings?.opening_time && settings?.closing_time) {
+      if (currentTime < settings.opening_time || currentTime > settings.closing_time) {
+        alert(`Store is closed. It opens at ${settings.opening_time}.`)
+        return
+      }
+    }
+
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       router.push("/login")
