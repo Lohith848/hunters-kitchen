@@ -1,6 +1,6 @@
-# The Hunters Kitchen - Student Food Ordering Platform
+# DineFlow - Student Food Ordering Platform
 
-A web application for college students to order food from The Hunters Kitchen with free delivery.
+A web application for college students to order food from The DineFlow with free delivery.
 
 ## Features
 
