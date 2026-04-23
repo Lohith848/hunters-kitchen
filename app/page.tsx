@@ -125,12 +125,12 @@ export default function HomePage() {
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05]">
               <span className="block">Fresh Food,</span>
               <span className="text-gradient block mt-2">Free Delivery</span>
-              <span className="block mt-2">to Your Hostel</span>
+              <span className="block mt-2">to You </span>
             </h1>
 
             <p className="mt-8 text-lg sm:text-xl text-muted-foreground max-w-xl leading-relaxed">
-              <span className="font-medium text-foreground">The Hunters Kitchen</span> brings 
-              home-style meals straight to your college hostel. No hidden fees, ever.
+              <span className="font-medium text-foreground">The DineFlow</span> brings 
+              home-style meals straight to you. No hidden fees, ever.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center gap-4 mt-12">
@@ -169,7 +169,7 @@ export default function HomePage() {
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Heart className="w-4 h-4 text-primary" />
                 </div>
-                <span>500+ Students</span>
+                <span>1000+ Students</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-secondary/20 flex items-center justify-center">
@@ -207,7 +207,7 @@ export default function HomePage() {
       <section className="container py-20 md:py-28">
         <div className="text-center mb-16 animate-fade-up">
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Why Students Love Us
+            Why Everyone Love Us
           </h2>
           <p className="text-muted-foreground mt-4 max-w-md mx-auto text-lg">
             Everything you need for a great meal, without the hassle
@@ -219,14 +219,14 @@ export default function HomePage() {
             {
               icon: Truck,
               title: "Free Delivery",
-              desc: "Zero delivery charges for all orders. We bring the food right to your hostel room.",
+              desc: "Zero delivery charges for all orders. We bring the food right to you.",
               color: "from-primary to-[oklch(0.55_0.12_30)]",
               shadow: "shadow-primary/15",
             },
             {
               icon: Wallet,
-              title: "Student Prices",
-              desc: "Specially curated pricing that fits a student budget. Quality food at honest rates.",
+              title: "Prices",
+              desc: "Specially curated pricing that fits a tight budget. Quality food at honest rates.",
               color: "from-secondary to-[oklch(0.60_0.10_145)]",
               shadow: "shadow-secondary/20",
             },
@@ -288,7 +288,7 @@ export default function HomePage() {
               {
                 step: "03",
                 title: "Get Delivered",
-                desc: "Sit back and relax. We'll deliver hot food to your hostel door.",
+                desc: "Sit back and relax. We'll deliver hot food to your door.",
               },
             ].map((item, index) => (
               <div key={item.step} className="relative text-center group">
@@ -324,7 +324,7 @@ export default function HomePage() {
               Ready to Order?
             </h2>
             <p className="text-white/80 mb-10 max-w-lg mx-auto text-lg">
-              Join hundreds of students who enjoy fresh meals delivered free every day.
+              Join hundreds of people who enjoy fresh meals delivered free every day.
             </p>
             {storeStatus.is_open ? (
               <Link
