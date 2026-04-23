@@ -83,7 +83,7 @@ export function Header() {
               <ChefHat className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-lg tracking-tight hidden sm:block font-[family-name:var(--font-display)]">
-              Hunters Kitchen
+              DineFlow
             </span>
           </Link>
 
