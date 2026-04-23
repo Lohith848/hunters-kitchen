@@ -33,7 +33,7 @@ A web application for college students to order food from The DineFlow with free
 ### 1. Clone and Install
 
 ```bash
-cd hunters-kitchen
+cd DineFlow
 npm install
 ```
 
