@@ -56,7 +56,7 @@ export default function AdminLayoutClient({
           </Button>
           <div className="flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5" />
-            <span className="font-bold">Hunters Kitchen</span>
+            <span className="font-bold">DineFlow</span>
           </div>
         </div>
         <Button
@@ -92,7 +92,7 @@ export default function AdminLayoutClient({
                 </div>
                 <div>
                   <p className="font-bold text-sm">Admin Panel</p>
-                  <p className="text-xs text-muted-foreground">Hunters Kitchen</p>
+                  <p className="text-xs text-muted-foreground">DineFlow</p>
                 </div>
               </div>
               <Button
